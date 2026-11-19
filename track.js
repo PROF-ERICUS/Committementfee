@@ -8,7 +8,8 @@
 
   const supabaseReady =
     window.YPG_SUPABASE_URL &&
-    window.YPG_SUPABASE_ANON_KEY;
+    window.YPG_SUPABASE_ANON_KEY &&
+    window.supabase;
 
   const supabase = supabaseReady
     ? window.supabase.createClient(
@@ -21,15 +22,26 @@
   const params = new URLSearchParams(window.location.search);
   const urlReference = params.get('reference');
 
+  // Create constituency element dynamically if it doesn't exist in HTML
+  const positionElement = document.getElementById('appointeePosition');
+  let constituencyElement = document.getElementById('appointeeConstituency');
+
+  if (positionElement && !constituencyElement) {
+    constituencyElement = document.createElement('p');
+    constituencyElement.id = 'appointeeConstituency';
+    constituencyElement.className = 'appointee-constituency';
+    positionElement.insertAdjacentElement('afterend', constituencyElement);
+  }
+
   if (urlReference) {
-    referenceInput.value = urlReference;
+    referenceInput.value = urlReference.trim().toUpperCase();
     lookupRegistration(urlReference);
   }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const reference = referenceInput.value.trim();
+    const reference = referenceInput.value.trim().toUpperCase();
 
     if (!reference) {
       showMessage('Please enter your registration reference.', true);
@@ -42,11 +54,16 @@
   async function lookupRegistration(reference) {
     result.hidden = true;
     showMessage('');
-    
+
     if (!supabase) {
-      showMessage('Supabase configuration is missing. Please contact the administrator.', true);
+      showMessage(
+        'Supabase configuration is missing. Please contact the administrator.',
+        true
+      );
       return;
     }
+
+    reference = String(reference || '').trim().toUpperCase();
 
     trackBtn.disabled = true;
     trackBtn.textContent = 'Checking…';
@@ -65,7 +82,10 @@
         if (error.context && typeof error.context.json === 'function') {
           try {
             const body = await error.context.json();
-            errorMessage = body.error || body.message || errorMessage;
+            errorMessage =
+              body.error ||
+              body.message ||
+              errorMessage;
           } catch (_) {}
         }
 
@@ -73,16 +93,23 @@
       }
 
       if (!data || !data.success || !data.registration) {
-        throw new Error(data?.error || 'Registration was not found.');
+        throw new Error(
+          data?.error || 'Registration was not found. Please check your reference.'
+        );
       }
 
       renderRegistration(data.registration);
+
       showMessage('');
       result.hidden = false;
 
     } catch (err) {
       console.error('Registration tracking error:', err);
-      showMessage(err.message || 'Unable to track registration.', true);
+
+      showMessage(
+        err.message || 'Unable to track registration. Please try again.',
+        true
+      );
 
     } finally {
       trackBtn.disabled = false;
@@ -97,12 +124,22 @@
       registration.last_name
     ].filter(Boolean).join(' ');
 
-    document.getElementById('appointeeName').textContent = fullName;
+    document.getElementById('appointeeName').textContent =
+      fullName || 'Registered Appointee';
+
     document.getElementById('appointeePosition').textContent =
-      registration.position || '';
+      registration.position || 'Position not specified';
+
+    // Display Constituency
+    if (constituencyElement) {
+      constituencyElement.textContent = registration.constituency
+        ? `Constituency: ${registration.constituency}`
+        : '';
+      constituencyElement.hidden = !registration.constituency;
+    }
 
     document.getElementById('resultReference').textContent =
-      `Reference: ${registration.reference}`;
+      `Reference: ${registration.reference || 'N/A'}`;
 
     document.getElementById('statusValue').textContent =
       statusLabel(registration.status);
@@ -112,11 +149,14 @@
 
     renderTimeline(registration.status);
 
+    // Admin notes
     const adminNote = document.getElementById('adminNote');
     const adminNoteText = document.getElementById('adminNoteText');
 
-    if (registration.admin_notes &&
-        ['correction', 'rejected'].includes(registration.status)) {
+    if (
+      registration.admin_notes &&
+      ['correction', 'rejected'].includes(registration.status)
+    ) {
       adminNoteText.textContent = registration.admin_notes;
       adminNote.hidden = false;
     } else {
@@ -140,15 +180,27 @@
 
   function statusDescription(status) {
     const descriptions = {
-      pending: 'Your registration has been received and is awaiting administrator review.',
-      under_review: 'An administrator is currently reviewing your registration and payment receipt.',
-      approved: 'Your payment has been verified and your registration has been approved.',
-      correction: 'Action is required. Please read the administrator’s message below.',
-      rejected: 'Your registration has been rejected. Please read the administrator’s message below.',
-      printed: 'Your sash has been marked as printed.'
+      pending:
+        'Your registration has been received and is awaiting administrator review.',
+
+      under_review:
+        'An administrator is currently reviewing your registration and payment receipt.',
+
+      approved:
+        'Your payment has been verified and your registration has been approved.',
+
+      correction:
+        'Action is required. Please read the administrator’s message below.',
+
+      rejected:
+        'Your registration has been rejected. Please read the administrator’s message below.',
+
+      printed:
+        'Your sash has been marked as printed.'
     };
 
-    return descriptions[status] || 'Your registration status has been updated.';
+    return descriptions[status] ||
+      'Your registration status has been updated.';
   }
 
   function renderTimeline(status) {
@@ -190,24 +242,36 @@
 
     timeline.innerHTML = stages.map((stage, index) => {
       let className = 'timeline-item';
+      let title = stage.title;
+      let description = stage.description;
 
-      if (index < currentIndex) className += ' complete';
-      if (index === currentIndex) className += ' current';
+      if (index < currentIndex) {
+        className += ' complete';
+      }
 
+      if (index === currentIndex) {
+        className += ' current';
+      }
+
+      // Special timeline messages
       if (status === 'correction' && index === 1) {
-        stage.title = 'Correction Required';
+        title = 'Correction Required';
+        description =
+          'Please follow the administrator’s instructions to correct your registration.';
       }
 
       if (status === 'rejected' && index === 1) {
-        stage.title = 'Registration Rejected';
+        title = 'Registration Rejected';
+        description =
+          'Your registration has been rejected. Check the administrator’s message.';
       }
 
       return `
         <div class="${className}">
           <div class="timeline-marker"></div>
           <div>
-            <div class="timeline-title">${escapeHTML(stage.title)}</div>
-            <div class="timeline-description">${escapeHTML(stage.description)}</div>
+            <div class="timeline-title">${escapeHTML(title)}</div>
+            <div class="timeline-description">${escapeHTML(description)}</div>
           </div>
         </div>
       `;
