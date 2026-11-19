@@ -49,8 +49,8 @@
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      message.textContent = 'Receipt file must be 5 MB or less.';
+    if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+      message.textContent = 'Receipt file must be between 1 byte and 5 MB.';
       message.classList.add('error');
       return;
     }
@@ -67,6 +67,13 @@
     formData.append('first_name', form.elements.first_name.value.trim());
     formData.append('middle_name', form.elements.middle_name.value.trim());
     formData.append('last_name', form.elements.last_name.value.trim());
+
+    // NEW: Constituency field
+    formData.append(
+      'constituency',
+      form.elements.constituency.value.trim()
+    );
+
     formData.append('position', form.elements.position.value.trim());
     formData.append('receipt', file);
 
