@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Sash Registration | YPG</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    .track-page {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .track-card {
+      background: #fff;
+      border: 1px solid #e5e9e6;
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.04);
+    }
+
+    .track-intro {
+      margin-bottom: 25px;
+    }
+
+    .track-intro h1 {
+      margin-bottom: 10px;
+    }
+
+    .track-form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .track-form input {
+      flex: 1;
+      min-width: 220px;
+      padding: 14px;
+      border: 1px solid #d6ded9;
+      border-radius: 9px;
+      font-size: 15px;
+    }
+
+    .track-form button {
+      padding: 14px 20px;
+      background: #104331;
+      color: white;
+      border: 0;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .track-form button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .track-message {
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .track-message.error {
+      color: #b42318;
+    }
+
+    .track-result {
+      margin-top: 28px;
+      border-top: 1px solid #e7ece8;
+      padding-top: 25px;
+    }
+
+    .track-result[hidden] {
+      display: none;
+    }
+
+    .track-person {
+      margin-bottom: 18px;
+    }
+
+    .track-person h2 {
+      margin: 0 0 5px;
+    }
+
+    .track-ref {
+      color: #637168;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .status-panel {
+      padding: 16px;
+      background: #f4f8f5;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .status-label {
+      font-size: 12px;
+      color: #66766b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .status-value {
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #104331;
+    }
+
+    .status-description {
+      margin-top: 8px;
+      color: #53645a;
+      line-height: 1.6;
+    }
+
+    .track-timeline {
+      margin: 24px 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+
+    .timeline-marker {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 14px;
+      border-radius: 50%;
+      background: #d5ddd7;
+      margin-top: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-item.complete .timeline-marker {
+      background: #16834a;
+    }
+
+    .timeline-item.current .timeline-marker {
+      background: #d69a24;
+      box-shadow: 0 0 0 4px #f8edda;
+    }
+
+    .timeline-item:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 18px;
+      bottom: 0;
+      width: 2px;
+      background: #e1e7e2;
+    }
+
+    .timeline-title {
+      font-weight: 700;
+    }
+
+    .timeline-description {
+      font-size: 13px;
+      color: #6b776f;
+      margin-top: 4px;
+    }
+
+    .admin-note {
+      margin-top: 20px;
+      padding: 16px;
+      background: #fff8e8;
+      border: 1px solid #f0dfb7;
+      border-radius: 12px;
+    }
+
+    .admin-note h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .admin-note p {
+      margin: 0;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #104331;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 600px) {
+      .track-page {
+        margin: 15px auto;
+        padding: 12px;
+      }
+
+      .track-card {
+        padding: 20px;
+      }
+
+      .track-form {
+        flex-direction: column;
+      }
+
+      .track-form button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="brand-mark">YPG</div>
+    <div>
+      <div class="brand-name">YOUTH PARLIAMENT GHANA</div>
+      <div class="brand-sub">Presidential Appointees · Swearing-In</div>
+    </div>
+  </header>
+
+  <main class="track-page">
+    <section class="track-card">
+
+      <div class="track-intro">
+        <p class="eyebrow">APPOINTEE PORTAL</p>
+        <h1>Track Your Registration</h1>
+        <p>
+          Enter the registration reference you received after submitting
+          your sash registration to view its current status.
+        </p>
+      </div>
+
+      <form id="trackForm" class="track-form">
+        <input
+          type="text"
+          id="reference"
+          name="reference"
+          placeholder="Enter registration reference"
+          required
+          autocomplete="off"
+        >
+
+        <button type="submit" id="trackBtn">
+          Track Registration
+        </button>
+      </form>
+
+      <p id="trackMessage" class="track-message" aria-live="polite"></p>
+
+      <section id="trackResult" class="track-result" hidden>
+        <div class="track-person">
+          <h2 id="appointeeName"></h2>
+          <p id="appointeePosition"></p>
+          <p id="resultReference" class="track-ref"></p>
+        </div>
+
+        <div class="status-panel">
+          <div class="status-label">Current Registration Status</div>
+          <div id="statusValue" class="status-value"></div>
+          <p id="statusDescription" class="status-description"></p>
+        </div>
+
+        <div class="track-timeline" id="trackTimeline"></div>
+
+        <div id="adminNote" class="admin-note" hidden>
+          <h3>Message from Registration Administration</h3>
+          <p id="adminNoteText"></p>
+        </div>
+      </section>
+
+      <a href="index.html" class="back-link">← Back to Registration</a>
+    </section>
+
+    <footer>
+      © Youth Parliament Ghana · Presidential Appointees Registration
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="track.js"></script>
+</body>
+</html>

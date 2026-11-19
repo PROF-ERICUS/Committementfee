@@ -1,0 +1,147 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YPG Sash Registration</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-mark">YPG</div>
+    <div>
+      <div class="brand-name">YOUTH PARLIAMENT GHANA</div>
+      <div class="brand-sub">Presidential Appointees · Swearing-In</div>
+    </div>
+  </header>
+
+  <main class="page-wrap">
+    <section class="hero">
+      <p class="eyebrow">OFFICIAL APPOINTEE PORTAL</p>
+      <h1>Sash Registration</h1>
+      <p>
+        Submit your details exactly as they should appear on your sash
+        and upload proof of payment for verification.
+      </p>
+
+      <!-- Registration Tracking Link -->
+      <div class="tracking-access">
+        <span>Already registered?</span>
+        <a href="track.html" class="track-link">
+          Track My Registration →
+        </a>
+      </div>
+
+      <div class="steps">
+        <span class="step active">01 <small>Details</small></span>
+        <i></i>
+        <span class="step">02 <small>Receipt</small></span>
+        <i></i>
+        <span class="step">03 <small>Review</small></span>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="card-heading">
+        <h2>Appointee Information</h2>
+        <p>All fields marked * are required.</p>
+      </div>
+
+      <form id="registrationForm">
+        <div class="field-grid">
+
+          <label>
+            First name *
+            <input
+              name="first_name"
+              required
+              maxlength="60"
+              autocomplete="given-name"
+              placeholder="e.g. Eric"
+            >
+          </label>
+
+          <label>
+            Middle name(s)
+            <input
+              name="middle_name"
+              maxlength="100"
+              autocomplete="additional-name"
+              placeholder="Middle name(s), if any"
+            >
+          </label>
+
+          <label>
+            Last name / Surname *
+            <input
+              name="last_name"
+              required
+              maxlength="60"
+              autocomplete="family-name"
+              placeholder="Your surname"
+            >
+          </label>
+
+          <label class="full">
+            Position / Appointment *
+            <input
+              name="position"
+              required
+              maxlength="160"
+              placeholder="Enter your official appointment"
+            >
+          </label>
+
+          <label class="full">
+            Payment receipt *
+            <span class="file-hint">
+              Accepted: JPG, PNG, PDF · Maximum 5 MB
+            </span>
+
+            <div class="upload-box">
+              <input
+                type="file"
+                name="receipt"
+                id="receipt"
+                required
+                accept="image/jpeg,image/png,application/pdf"
+              >
+              <span id="fileName">Choose your receipt file</span>
+              <small>Receipt image or PDF</small>
+            </div>
+          </label>
+
+        </div>
+
+        <div class="notice">
+          <strong>Important:</strong>
+          Uploading a receipt does not mean your payment is approved.
+          Your submission remains pending until an authorized administrator verifies it.
+        </div>
+
+        <label class="confirm">
+          <input type="checkbox" required>
+          <span>
+            I confirm that the details entered are accurate and should be used for my sash.
+          </span>
+        </label>
+
+        <button class="primary-btn" type="submit" id="submitBtn">
+          Submit Registration <span>→</span>
+        </button>
+
+        <p class="form-message" id="formMessage" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer>
+      © Youth Parliament Ghana · Presidential Appointees Registration
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>YPG Sash Admin</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<body class="admin-body">
+<header class="site-header"><div class="brand-mark">YPG</div><div><div class="brand-name">YOUTH PARLIAMENT GHANA</div><div class="brand-sub">Sash Registration · Admin</div></div><a class="header-link" href="index.html">Public portal ↗</a></header>
+<main class="admin-wrap">
+  <section id="loginCard" class="form-card login-card"><p class="eyebrow">ADMIN ACCESS</p><h1>Sign in</h1><p class="muted">Authorized receipt verification personnel only.</p><form id="loginForm"><label>Email<input name="email" type="email" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><button class="primary-btn">Sign in</button><p class="form-message" id="loginMessage"></p></form></section>
+  <section id="dashboard" hidden>
+    <div class="dash-title"><div><p class="eyebrow">VERIFICATION DESK</p><h1>Registrations</h1><p class="muted">Review receipts, approve records and prepare sash production.</p></div><button class="outline-btn" id="logoutBtn">Sign out</button></div>
+    <div class="stats-grid"><article><small>Total</small><strong id="totalCount">0</strong></article><article><small>Pending</small><strong id="pendingCount">0</strong></article><article><small>Approved</small><strong id="approvedCount">0</strong></article><article><small>Rejected / Correction</small><strong id="otherCount">0</strong></article></div>
+    <div class="toolbar"><input id="searchInput" placeholder="Search name or position…"><select id="statusFilter"><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="correction">Correction required</option><option value="printed">Printed</option></select><button class="outline-btn" id="refreshBtn">Refresh</button><button class="outline-btn" id="exportBtn">Export approved CSV</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Appointee</th><th>Position</th><th>Receipt</th><th>Status</th><th>Actions</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div><p class="form-message" id="adminMessage"></p>
+  </section>
+</main>
+<script src="config.js"></script><script src="admin.js"></script>
+</body></html>
