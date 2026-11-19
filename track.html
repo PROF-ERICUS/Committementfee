@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,6 +68,10 @@
 
     .track-message.error {
       color: #b42318;
+    }
+
+    .track-message.success {
+      color: #16834a;
     }
 
     .track-result {
@@ -192,6 +195,57 @@
       line-height: 1.6;
     }
 
+    /* CORRECTION NOTICE */
+
+    .correction-action {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 14px;
+    }
+
+    .correction-action[hidden] {
+      display: none !important;
+    }
+
+    .correction-action h3 {
+      margin: 0 0 8px;
+      color: #9a3412;
+    }
+
+    .correction-action p {
+      color: #7c2d12;
+      line-height: 1.6;
+      margin: 0 0 15px;
+    }
+
+    .correction-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 20px;
+      border-radius: 10px;
+      background: #b45309;
+      color: #fff !important;
+      text-decoration: none !important;
+      font-weight: 800;
+      transition: background .2s ease, transform .2s ease;
+    }
+
+    .correction-btn:hover {
+      background: #92400e;
+      transform: translateY(-1px);
+    }
+
+    .correction-btn:focus-visible {
+      outline: 3px solid #fbbf24;
+      outline-offset: 3px;
+    }
+
     .back-link {
       display: inline-block;
       margin-top: 20px;
@@ -222,8 +276,10 @@
 </head>
 
 <body>
+
   <header class="site-header">
     <div class="brand-mark">YPG</div>
+
     <div>
       <div class="brand-name">YOUTH PARLIAMENT GHANA</div>
       <div class="brand-sub">Presidential Appointees · Swearing-In</div>
@@ -231,18 +287,23 @@
   </header>
 
   <main class="track-page">
+
     <section class="track-card">
 
       <div class="track-intro">
         <p class="eyebrow">APPOINTEE PORTAL</p>
+
         <h1>Track Your Registration</h1>
+
         <p>
           Enter the registration reference you received after submitting
           your sash registration to view its current status.
         </p>
       </div>
 
+      <!-- TRACKING FORM -->
       <form id="trackForm" class="track-form">
+
         <input
           type="text"
           id="reference"
@@ -255,40 +316,124 @@
         <button type="submit" id="trackBtn">
           Track Registration
         </button>
+
       </form>
 
       <p id="trackMessage" class="track-message" aria-live="polite"></p>
 
+      <!-- TRACKING RESULT -->
       <section id="trackResult" class="track-result" hidden>
+
         <div class="track-person">
           <h2 id="appointeeName"></h2>
           <p id="appointeePosition"></p>
           <p id="resultReference" class="track-ref"></p>
         </div>
 
+        <!-- STATUS -->
         <div class="status-panel">
-          <div class="status-label">Current Registration Status</div>
+
+          <div class="status-label">
+            Current Registration Status
+          </div>
+
           <div id="statusValue" class="status-value"></div>
+
           <p id="statusDescription" class="status-description"></p>
+
         </div>
 
+        <!-- TIMELINE -->
         <div class="track-timeline" id="trackTimeline"></div>
 
+        <!-- ADMIN MESSAGE -->
         <div id="adminNote" class="admin-note" hidden>
+
           <h3>Message from Registration Administration</h3>
+
           <p id="adminNoteText"></p>
+
         </div>
+
+        <!-- CORRECTION ACTION -->
+        <div
+          id="correctionAction"
+          class="correction-action"
+          hidden
+        >
+
+          <h3>Action Required: Correct Your Registration</h3>
+
+          <p>
+            Your registration has been returned for correction.
+            Please read the administrator's instructions above
+            and update only the requested information.
+          </p>
+
+          <a
+            href="correction.html"
+            id="correctionLink"
+            class="correction-btn"
+          >
+            Make Correction →
+          </a>
+
+        </div>
+
       </section>
 
-      <a href="index.html" class="back-link">← Back to Registration</a>
+      <a href="index.html" class="back-link">
+        ← Back to Registration
+      </a>
+
     </section>
 
     <footer>
       © Youth Parliament Ghana · Presidential Appointees Registration
     </footer>
+
   </main>
 
   <script src="config.js"></script>
   <script src="track.js"></script>
+
+  <!-- Correction button handling -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const correctionAction = document.getElementById("correctionAction");
+      const correctionLink = document.getElementById("correctionLink");
+      const referenceInput = document.getElementById("reference");
+
+      window.YPG_SHOW_CORRECTION = function (reference) {
+        if (!correctionAction || !correctionLink) return;
+
+        const cleanReference = String(reference || "")
+          .trim()
+          .toUpperCase();
+
+        correctionLink.href =
+          "correction.html?reference=" +
+          encodeURIComponent(cleanReference);
+
+        correctionAction.hidden = false;
+      };
+
+      window.YPG_HIDE_CORRECTION = function () {
+        if (correctionAction) {
+          correctionAction.hidden = true;
+        }
+      };
+
+      // Hide correction action until the tracking script confirms
+      // that this registration is in correction status.
+      window.YPG_HIDE_CORRECTION();
+
+      // If reference is typed, keep the action hidden until lookup succeeds.
+      referenceInput?.addEventListener("input", function () {
+        window.YPG_HIDE_CORRECTION();
+      });
+    });
+  </script>
+
 </body>
 </html>
