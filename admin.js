@@ -24,7 +24,10 @@
 
   let registrations = [];
 
-  // Escape HTML
+  // --------------------------------------------------
+  // HELPERS
+  // --------------------------------------------------
+
   const escapeHtml = (s) =>
     String(s ?? '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;',
@@ -34,33 +37,52 @@
       "'": '&#39;'
     }[c]));
 
-  // Status badge
-  function statusBadge(status) {
-    return `<span class="pill ${escapeHtml(status)}">${escapeHtml(status)}</span>`;
+  function setAdminMessage(text, type = 'success') {
+    adminMsg.textContent = text;
+    adminMsg.className = `form-message ${type}`;
   }
 
-  // Admin session check
+  function statusBadge(status) {
+    const labels = {
+      pending: 'Pending',
+      approved: 'Approved',
+      correction: 'Correction Required',
+      rejected: 'Rejected',
+      printed: 'Printed',
+      under_review: 'Under Review'
+    };
+
+    return `<span class="pill ${escapeHtml(status)}">${escapeHtml(labels[status] || status)}</span>`;
+  }
+
+  // --------------------------------------------------
+  // ADMIN SESSION
+  // --------------------------------------------------
+
   async function sessionCheck() {
     if (!sb) return;
 
     const { data: { session } } = await sb.auth.getSession();
 
-    if (session) {
-      const { data: admin, error } = await sb
-        .from('ypg_sash_admins')
-        .select('user_id')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+    if (!session) return;
 
-      if (!error && admin) {
-        await showDash();
-      } else {
-        await sb.auth.signOut();
-      }
+    const { data: admin, error } = await sb
+      .from('ypg_sash_admins')
+      .select('user_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (!error && admin) {
+      await showDash();
+    } else {
+      await sb.auth.signOut();
     }
   }
 
-  // Login
+  // --------------------------------------------------
+  // LOGIN
+  // --------------------------------------------------
+
   loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -95,14 +117,16 @@
     }
   });
 
-  // Show dashboard
+  // --------------------------------------------------
+  // DASHBOARD
+  // --------------------------------------------------
+
   async function showDash() {
     loginCard.hidden = true;
     dashboard.hidden = false;
     await loadData();
   }
 
-  // Load registrations
   async function loadData() {
     if (!sb) return;
 
@@ -117,8 +141,7 @@
       .order('created_at', { ascending: false });
 
     if (error) {
-      adminMsg.textContent = error.message;
-      adminMsg.className = 'form-message error';
+      setAdminMessage(error.message, 'error');
 
       rows.innerHTML =
         '<tr><td colspan="6" class="empty">Failed to load registrations.</td></tr>';
@@ -130,7 +153,10 @@
     render();
   }
 
-  // Render dashboard
+  // --------------------------------------------------
+  // RENDER
+  // --------------------------------------------------
+
   function render() {
     const total = registrations.length;
 
@@ -151,7 +177,6 @@
     document.getElementById('approvedCount').textContent = approved;
     document.getElementById('otherCount').textContent = other;
 
-    // Search by name, constituency, or position
     const q = (
       document.getElementById('searchInput')?.value || ''
     ).toLowerCase().trim();
@@ -199,12 +224,23 @@
           ? `<button data-action="printed" data-id="${escapeHtml(r.id)}">Mark printed</button>`
           : '';
 
+      const notePreview = r.admin_notes
+        ? `<span class="sub admin-note-preview">${escapeHtml(r.admin_notes)}</span>`
+        : '';
+
+      const correctionPreview =
+        r.status === 'correction' && Array.isArray(r.correction_fields)
+          ? `<span class="sub">Requested fields: ${escapeHtml(r.correction_fields.join(', '))}</span>`
+          : '';
+
       return `
         <tr>
           <td>
             <span class="person">${escapeHtml(fullName)}</span>
             <span class="sub">Submitted ${escapeHtml(submitted)}</span>
             <span class="sub">Ref: ${escapeHtml(r.reference || 'N/A')}</span>
+            ${notePreview}
+            ${correctionPreview}
           </td>
 
           <td>${escapeHtml(constituency)}</td>
@@ -234,7 +270,125 @@
     }).join('');
   }
 
-  // Row actions: attached ONCE, outside loadData()
+  // --------------------------------------------------
+  // CORRECTION FIELD SELECTION
+  // --------------------------------------------------
+
+  function collectCorrection(record) {
+    const name = [
+      record.first_name,
+      record.middle_name,
+      record.last_name
+    ].filter(Boolean).join(' ');
+
+    const fieldOptions = [
+      { key: 'first_name', label: 'First Name' },
+      { key: 'middle_name', label: 'Middle Name' },
+      { key: 'last_name', label: 'Last Name' },
+      { key: 'constituency', label: 'Constituency' },
+      { key: 'position', label: 'Position / Appointment' },
+      { key: 'receipt', label: 'Payment Receipt' }
+    ];
+
+    const selectionText = fieldOptions
+      .map((field, index) => `${index + 1}. ${field.label}`)
+      .join('\n');
+
+    const selection = window.prompt(
+      `REQUEST CORRECTION FROM:\n${name}\n\n` +
+      `Select the field(s) that need correction.\n\n` +
+      `${selectionText}\n\n` +
+      `Enter the number(s), separated by commas.\n` +
+      `Example: 1,4,6`
+    );
+
+    // Cancel aborts action
+    if (selection === null) {
+      return null;
+    }
+
+    const selectedNumbers = selection
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (!selectedNumbers.length) {
+      alert('Please select at least one field.');
+      return null;
+    }
+
+    const validNumbers = ['1', '2', '3', '4', '5', '6'];
+
+    const invalid = selectedNumbers.some(
+      (number) => !validNumbers.includes(number)
+    );
+
+    if (invalid) {
+      alert('Invalid selection. Use numbers 1 to 6.');
+      return null;
+    }
+
+    const correctionFields = [
+      ...new Set(
+        selectedNumbers.map(
+          (number) => fieldOptions[Number(number) - 1].key
+        )
+      )
+    ];
+
+    const message = window.prompt(
+      `CORRECTION MESSAGE FOR ${name}\n\n` +
+      `Explain exactly what the applicant must correct:`
+    );
+
+    if (message === null) {
+      return null;
+    }
+
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage) {
+      alert('A correction message is required.');
+      return null;
+    }
+
+    return {
+      fields: correctionFields,
+      message: trimmedMessage
+    };
+  }
+
+  // --------------------------------------------------
+  // REJECTION REASON
+  // --------------------------------------------------
+
+  function collectRejection(record) {
+    const name = [
+      record.first_name,
+      record.middle_name,
+      record.last_name
+    ].filter(Boolean).join(' ');
+
+    const reason = window.prompt(
+      `REJECTION REASON FOR ${name}\n\n` +
+      `Enter a rejection reason.\n` +
+      `You may leave it blank if no explanation is required.`
+    );
+
+    if (reason === null) {
+      return { cancelled: true };
+    }
+
+    return {
+      cancelled: false,
+      note: reason.trim() || null
+    };
+  }
+
+  // --------------------------------------------------
+  // ROW ACTIONS
+  // --------------------------------------------------
+
   rows?.addEventListener('click', async (e) => {
     // View receipt
     const receiptLink = e.target.closest('[data-receipt]');
@@ -246,8 +400,7 @@
       const record = registrations.find((r) => r.id === id);
 
       if (!record?.receipt_path) {
-        adminMsg.textContent = 'Receipt path is missing for this record.';
-        adminMsg.className = 'form-message error';
+        setAdminMessage('Receipt path is missing for this record.', 'error');
         return;
       }
 
@@ -256,8 +409,7 @@
         .createSignedUrl(record.receipt_path, 120);
 
       if (error) {
-        adminMsg.textContent = error.message;
-        adminMsg.className = 'form-message error';
+        setAdminMessage(error.message, 'error');
         return;
       }
 
@@ -265,37 +417,136 @@
       return;
     }
 
-    // Registration actions
+    // Action button
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
 
     const id = btn.dataset.id;
     const action = btn.dataset.action;
 
-    btn.disabled = true;
+    const record = registrations.find((r) => r.id === id);
 
-    const { error } = await sb
-      .from('ypg_sash_registrations')
-      .update({
-        status: action,
-        reviewed_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    if (error) {
-      adminMsg.textContent = error.message;
-      adminMsg.className = 'form-message error';
-      btn.disabled = false;
+    if (!record) {
+      setAdminMessage('Registration record not found.', 'error');
       return;
     }
 
-    await loadData();
+    const allowedActions = [
+      'approved',
+      'rejected',
+      'correction',
+      'printed'
+    ];
 
-    adminMsg.textContent = `Record updated: ${action}.`;
-    adminMsg.className = 'form-message success';
+    if (!allowedActions.includes(action)) return;
+
+    btn.disabled = true;
+
+    try {
+      let adminNote = null;
+      let correctionFields = [];
+
+      // Collect correction data
+      if (action === 'correction') {
+        const correctionData = collectCorrection(record);
+
+        if (!correctionData) {
+          btn.disabled = false;
+          return;
+        }
+
+        adminNote = correctionData.message;
+        correctionFields = correctionData.fields;
+      }
+
+      // Collect rejection data
+      if (action === 'rejected') {
+        const rejectionData = collectRejection(record);
+
+        if (rejectionData.cancelled) {
+          btn.disabled = false;
+          return;
+        }
+
+        adminNote = rejectionData.note;
+      }
+
+      const actionLabels = {
+        approved: 'approve',
+        rejected: 'reject',
+        correction: 'request correction from',
+        printed: 'mark as printed'
+      };
+
+      const fullName = [
+        record.first_name,
+        record.middle_name,
+        record.last_name
+      ].filter(Boolean).join(' ');
+
+      const confirmationText =
+        action === 'correction'
+          ? `Request correction from ${fullName}?\n\nFields: ${correctionFields.join(', ')}\n\nMessage: ${adminNote}`
+          : action === 'rejected'
+              ? `Are you sure you want to reject ${fullName}?\n\nReason: ${adminNote || 'No reason provided'}`
+              : `Are you sure you want to ${actionLabels[action]} ${fullName}?`;
+
+      if (!window.confirm(confirmationText)) {
+        btn.disabled = false;
+        return;
+      }
+
+      const updatePayload = {
+        status: action,
+        reviewed_at: new Date().toISOString(),
+
+        admin_notes:
+          action === 'correction' || action === 'rejected'
+            ? adminNote
+            : null,
+
+        // Correction permissions are reset on all other statuses.
+        correction_fields:
+          action === 'correction'
+            ? correctionFields
+            : []
+      };
+
+      const { error } = await sb
+        .from('ypg_sash_registrations')
+        .update(updatePayload)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadData();
+
+      const successMessages = {
+        approved: 'Registration approved successfully.',
+        rejected: 'Registration rejected.',
+        correction: `Correction request saved. Requested fields: ${correctionFields.join(', ')}`,
+        printed: 'Registration marked as printed.'
+      };
+
+      setAdminMessage(successMessages[action], 'success');
+
+    } catch (error) {
+      console.error('Admin action error:', error);
+
+      setAdminMessage(
+        error.message || 'Failed to update registration.',
+        'error'
+      );
+
+    } finally {
+      btn.disabled = false;
+    }
   });
 
-  // Logout
+  // --------------------------------------------------
+  // LOGOUT
+  // --------------------------------------------------
+
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
     if (sb) {
       await sb.auth.signOut();
@@ -306,25 +557,38 @@
     loginForm?.reset();
   });
 
-  // Refresh
+  // --------------------------------------------------
+  // REFRESH
+  // --------------------------------------------------
+
   document.getElementById('refreshBtn')?.addEventListener('click', loadData);
 
-  // Search
+  // --------------------------------------------------
+  // SEARCH
+  // --------------------------------------------------
+
   document.getElementById('searchInput')?.addEventListener('input', render);
 
-  // Status filter
+  // --------------------------------------------------
+  // FILTER
+  // --------------------------------------------------
+
   document.getElementById('statusFilter')?.addEventListener('change', render);
 
-  // CSV Export
+  // --------------------------------------------------
+  // CSV EXPORT
+  // --------------------------------------------------
+
   document.getElementById('exportBtn')?.addEventListener('click', () => {
     const approvedRows = registrations.filter(
       (r) => ['approved', 'printed'].includes(r.status)
     );
 
     if (!approvedRows.length) {
-      adminMsg.textContent =
-        'There are no approved registrations to export.';
-      adminMsg.className = 'form-message error';
+      setAdminMessage(
+        'There are no approved registrations to export.',
+        'error'
+      );
       return;
     }
 
@@ -376,11 +640,13 @@
 
     URL.revokeObjectURL(url);
 
-    adminMsg.textContent = 'Approved registrations exported successfully.';
-    adminMsg.className = 'form-message success';
+    setAdminMessage('Approved registrations exported successfully.', 'success');
   });
 
-  // Configuration check
+  // --------------------------------------------------
+  // CONFIGURATION
+  // --------------------------------------------------
+
   if (!sb) {
     loginMsg.textContent =
       'Configure Supabase URL and publishable key in config.js to use admin login.';
