@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Correct Registration | Youth Parliament Ghana</title>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .correction-page {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .correction-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .correction-header h1 {
+      margin-bottom: 8px;
+    }
+
+    .correction-subtitle {
+      color: #777;
+      font-size: 14px;
+    }
+
+    .correction-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+      border: 1px solid #eaeaea;
+    }
+
+    .correction-notice {
+      background: #fff8e6;
+      border: 1px solid #f0d38a;
+      color: #7b5800;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 22px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .correction-reference {
+      background: #f6f7f9;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .correction-reference strong {
+      display: block;
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 5px;
+    }
+
+    .correction-reference span {
+      font-weight: 700;
+      letter-spacing: 1px;
+      overflow-wrap: anywhere;
+    }
+
+    .correction-admin-message {
+      background: #fff1f1;
+      border-left: 4px solid #c62828;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 25px;
+    }
+
+    .correction-admin-message h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: #b42323;
+    }
+
+    .correction-admin-message p {
+      margin: 0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .correction-form {
+      display: none;
+    }
+
+    .correction-form.active {
+      display: block;
+    }
+
+    .correction-field {
+      margin-bottom: 20px;
+    }
+
+    .correction-field label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .correction-field input,
+    .correction-field select,
+    .correction-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      border: 1px solid #d8d8d8;
+      border-radius: 9px;
+      font: inherit;
+      background: #fff;
+    }
+
+    .correction-field input:focus,
+    .correction-field select:focus,
+    .correction-field textarea:focus {
+      outline: none;
+      border-color: #14532d;
+      box-shadow: 0 0 0 3px rgba(20,83,45,0.10);
+    }
+
+    .correction-field input:disabled,
+    .correction-field select:disabled {
+      background: #f3f4f6;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .field-status {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      color: #777;
+    }
+
+    .locked-note {
+      color: #777;
+    }
+
+    .editable-note {
+      color: #137333;
+    }
+
+    .receipt-info {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .correction-confirmation {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 22px 0;
+    }
+
+    .correction-confirmation label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-weight: 400;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .correction-confirmation input {
+      margin-top: 4px;
+    }
+
+    .correction-submit-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #14532d;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .correction-submit-btn:hover {
+      background: #0d3d20;
+    }
+
+    .correction-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .correction-message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .correction-message.error {
+      display: block;
+      background: #fff0f0;
+      color: #b42323;
+    }
+
+    .correction-message.success {
+      display: block;
+      background: #edf8f0;
+      color: #176b32;
+    }
+
+    .lookup-section {
+      margin-bottom: 20px;
+    }
+
+    .lookup-section input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      margin-bottom: 10px;
+    }
+
+    .lookup-section button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 9px;
+      border: none;
+      background: #222;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .lookup-section button:disabled {
+      opacity: 0.6;
+    }
+
+    .lookup-message {
+      font-size: 13px;
+      margin-top: 10px;
+      color: #666;
+    }
+
+    .correction-back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #14532d;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .correction-page {
+        margin: 15px auto;
+        padding: 12px;
+      }
+
+      .correction-card {
+        padding: 20px 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="correction-page">
+
+    <header class="correction-header">
+      <h1>Correct Your Registration</h1>
+      <p class="correction-subtitle">
+        Youth Parliament Ghana Presidential Appointees Sash Registration
+      </p>
+    </header>
+
+    <section class="correction-card">
+
+      <div class="correction-notice">
+        <strong>Important:</strong>
+        This page is only for registrations that have been flagged for correction
+        by an administrator. You may only edit the information requested.
+        Do not create another registration.
+      </div>
+
+      <!-- Reference lookup -->
+      <div class="lookup-section" id="correctionLookupSection">
+        <form id="correctionLookupForm">
+          <label for="correctionReference">
+            Registration Reference
+          </label>
+
+          <input
+            type="text"
+            id="correctionReference"
+            name="reference"
+            placeholder="Enter your registration reference"
+            autocomplete="off"
+            required
+          >
+
+          <button type="submit" id="lookupCorrectionBtn">
+            Load Registration
+          </button>
+
+          <p id="lookupMessage" class="lookup-message"></p>
+        </form>
+      </div>
+
+      <!-- Correction area -->
+      <section id="correctionPanel" hidden>
+
+        <div class="correction-reference">
+          <strong>REGISTRATION REFERENCE</strong>
+          <span id="displayReference">—</span>
+        </div>
+
+        <!-- Admin instructions -->
+        <div class="correction-admin-message">
+          <h3>Administrator's Message</h3>
+          <p id="adminCorrectionMessage">
+            No correction message available.
+          </p>
+        </div>
+
+        <form id="correctionForm" class="correction-form">
+
+          <input type="hidden" id="registrationId" name="registrationId">
+
+          <!-- FIRST NAME -->
+          <div class="correction-field" id="firstNameField" hidden>
+            <label for="firstName">First Name</label>
+            <input
+              type="text"
+              id="firstName"
+              name="first_name"
+              autocomplete="given-name"
+            >
+            <small id="firstNameStatus" class="field-status"></small>
+          </div>
+
+          <!-- MIDDLE NAME -->
+          <div class="correction-field" id="middleNameField" hidden>
+            <label for="middleName">Middle Name</label>
+            <input
+              type="text"
+              id="middleName"
+              name="middle_name"
+              autocomplete="additional-name"
+            >
+            <small id="middleNameStatus" class="field-status"></small>
+          </div>
+
+          <!-- LAST NAME -->
+          <div class="correction-field" id="lastNameField" hidden>
+            <label for="lastName">Last Name</label>
+            <input
+              type="text"
+              id="lastName"
+              name="last_name"
+              autocomplete="family-name"
+            >
+            <small id="lastNameStatus" class="field-status"></small>
+          </div>
+
+          <!-- CONSTITUENCY -->
+          <div class="correction-field" id="constituencyField" hidden>
+            <label for="constituency">Constituency</label>
+            <input
+              type="text"
+              id="constituency"
+              name="constituency"
+              placeholder="Enter your constituency"
+            >
+            <small id="constituencyStatus" class="field-status"></small>
+          </div>
+
+          <!-- POSITION -->
+          <div class="correction-field" id="positionField" hidden>
+            <label for="position">Position / Appointment</label>
+            <input
+              type="text"
+              id="position"
+              name="position"
+              placeholder="Enter your correct position"
+            >
+            <small id="positionStatus" class="field-status"></small>
+          </div>
+
+          <!-- PAYMENT RECEIPT -->
+          <div class="correction-field" id="receiptField" hidden>
+            <label for="replacementReceipt">
+              Replacement Payment Receipt
+            </label>
+
+            <input
+              type="file"
+              id="replacementReceipt"
+              name="receipt"
+              accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+            >
+
+            <p class="receipt-info">
+              Upload a clear receipt in JPG, PNG or PDF format.
+              Maximum file size: 5 MB.
+            </p>
+
+            <small id="receiptStatus" class="field-status"></small>
+          </div>
+
+          <!-- Confirmation -->
+          <div class="correction-confirmation">
+            <label>
+              <input
+                type="checkbox"
+                id="correctionConfirmation"
+                required
+              >
+              <span>
+                I confirm that the information I am submitting is accurate
+                and that I have corrected the requested details.
+              </span>
+            </label>
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            id="submitCorrectionBtn"
+            class="correction-submit-btn"
+          >
+            Submit Correction
+          </button>
+
+          <div
+            id="correctionMessage"
+            class="correction-message"
+            role="status"
+            aria-live="polite"
+          ></div>
+
+        </form>
+      </section>
+
+      <a href="track.html" class="correction-back-link">
+        ← Back to Registration Tracking
+      </a>
+
+    </section>
+  </main>
+
+  <!-- Configuration -->
+  <script src="config.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Correction logic -->
+  <script src="correction.js"></script>
+
+</body>
+</html>
