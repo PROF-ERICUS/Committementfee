@@ -18,11 +18,10 @@
       )
     : null;
 
-  // Automatically load reference from URL
   const params = new URLSearchParams(window.location.search);
   const urlReference = params.get('reference');
 
-  // Create constituency element dynamically if it doesn't exist in HTML
+  // Constituency display
   const positionElement = document.getElementById('appointeePosition');
   let constituencyElement = document.getElementById('appointeeConstituency');
 
@@ -32,6 +31,21 @@
     constituencyElement.className = 'appointee-constituency';
     positionElement.insertAdjacentElement('afterend', constituencyElement);
   }
+
+  // Correction button helpers from track.html
+  function hideCorrectionButton() {
+    if (typeof window.YPG_HIDE_CORRECTION === 'function') {
+      window.YPG_HIDE_CORRECTION();
+    }
+  }
+
+  function showCorrectionButton(reference) {
+    if (typeof window.YPG_SHOW_CORRECTION === 'function') {
+      window.YPG_SHOW_CORRECTION(reference);
+    }
+  }
+
+  hideCorrectionButton();
 
   if (urlReference) {
     referenceInput.value = urlReference.trim().toUpperCase();
@@ -44,6 +58,7 @@
     const reference = referenceInput.value.trim().toUpperCase();
 
     if (!reference) {
+      hideCorrectionButton();
       showMessage('Please enter your registration reference.', true);
       return;
     }
@@ -53,6 +68,7 @@
 
   async function lookupRegistration(reference) {
     result.hidden = true;
+    hideCorrectionButton();
     showMessage('');
 
     if (!supabase) {
@@ -106,6 +122,8 @@
     } catch (err) {
       console.error('Registration tracking error:', err);
 
+      hideCorrectionButton();
+
       showMessage(
         err.message || 'Unable to track registration. Please try again.',
         true
@@ -135,6 +153,7 @@
       constituencyElement.textContent = registration.constituency
         ? `Constituency: ${registration.constituency}`
         : '';
+
       constituencyElement.hidden = !registration.constituency;
     }
 
@@ -149,7 +168,7 @@
 
     renderTimeline(registration.status);
 
-    // Admin notes
+    // Admin Notes
     const adminNote = document.getElementById('adminNote');
     const adminNoteText = document.getElementById('adminNoteText');
 
@@ -162,6 +181,13 @@
     } else {
       adminNote.hidden = true;
       adminNoteText.textContent = '';
+    }
+
+    // Show correction action ONLY for correction status
+    if (registration.status === 'correction') {
+      showCorrectionButton(registration.reference);
+    } else {
+      hideCorrectionButton();
     }
   }
 
@@ -253,7 +279,6 @@
         className += ' current';
       }
 
-      // Special timeline messages
       if (status === 'correction' && index === 1) {
         title = 'Correction Required';
         description =
