@@ -117,3 +117,27 @@
     padding-right: 2px;
   }
 }
+.reference-recovery {
+  margin-top: 15px;
+  padding: 16px;
+  text-align: center;
+  background: #f4f8f5;
+  border: 1px solid #e0e9e2;
+  border-radius: 12px;
+}
+
+.reference-recovery p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #637168;
+}
+
+.reference-recovery a {
+  color: #104331;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.reference-recovery a:hover {
+  text-decoration: underline;
+}
