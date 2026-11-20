@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
   <header class="site-header">
     <div class="brand-mark">YPG</div>
     <div>
@@ -18,6 +19,7 @@
   </header>
 
   <main class="page-wrap">
+
     <section class="hero">
       <p class="eyebrow">OFFICIAL APPOINTEE PORTAL</p>
       <h1>Sash Registration</h1>
@@ -44,14 +46,17 @@
     </section>
 
     <section class="form-card">
+
       <div class="card-heading">
         <h2>Appointee Information</h2>
         <p>All fields marked * are required.</p>
       </div>
 
       <form id="registrationForm">
+
         <div class="field-grid">
 
+          <!-- FIRST NAME -->
           <label>
             First name *
             <input
@@ -63,6 +68,7 @@
             >
           </label>
 
+          <!-- MIDDLE NAME -->
           <label>
             Middle name(s)
             <input
@@ -73,6 +79,7 @@
             >
           </label>
 
+          <!-- LAST NAME -->
           <label>
             Last name / Surname *
             <input
@@ -84,7 +91,25 @@
             >
           </label>
 
-          <!-- NEW CONSTITUENCY FIELD -->
+          <!-- PHONE NUMBER -->
+          <label>
+            Phone Number *
+            <input
+              type="tel"
+              name="phone"
+              id="phone"
+              required
+              maxlength="20"
+              autocomplete="tel"
+              inputmode="tel"
+              placeholder="e.g. 0241234567"
+            >
+            <span class="file-hint">
+              Use the phone number you can access. It will be used to recover your registration reference.
+            </span>
+          </label>
+
+          <!-- CONSTITUENCY -->
           <label>
             Constituency Name *
             <input
@@ -95,6 +120,7 @@
             >
           </label>
 
+          <!-- POSITION -->
           <label class="full">
             Position / Appointment *
             <input
@@ -105,6 +131,7 @@
             >
           </label>
 
+          <!-- PAYMENT RECEIPT -->
           <label class="full">
             Payment receipt *
             <span class="file-hint">
@@ -126,12 +153,14 @@
 
         </div>
 
+        <!-- PAYMENT NOTICE -->
         <div class="notice">
           <strong>Important:</strong>
           Uploading a receipt does not mean your payment is approved.
           Your submission remains pending until an authorized administrator verifies it.
         </div>
 
+        <!-- CONFIRMATION -->
         <label class="confirm">
           <input type="checkbox" required>
           <span>
@@ -139,20 +168,24 @@
           </span>
         </label>
 
+        <!-- SUBMIT -->
         <button class="primary-btn" type="submit" id="submitBtn">
           Submit Registration <span>→</span>
         </button>
 
         <p class="form-message" id="formMessage" aria-live="polite"></p>
+
       </form>
     </section>
 
     <footer>
       © Youth Parliament Ghana · Presidential Appointees Registration
     </footer>
+
   </main>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
