@@ -1,4 +1,3 @@
-
 (() => {
   const lookupForm = document.getElementById('correctionLookupForm');
   const referenceInput = document.getElementById('correctionReference');
@@ -35,6 +34,10 @@
     'application/pdf'
   ];
 
+  // --------------------------------------------------
+  // FIELD CONFIGURATION
+  // --------------------------------------------------
+
   const fieldConfig = {
     first_name: {
       wrapper: 'firstNameField',
@@ -42,30 +45,43 @@
       status: 'firstNameStatus',
       label: 'First Name'
     },
+
     middle_name: {
       wrapper: 'middleNameField',
       input: 'middleName',
       status: 'middleNameStatus',
       label: 'Middle Name'
     },
+
     last_name: {
       wrapper: 'lastNameField',
       input: 'lastName',
       status: 'lastNameStatus',
       label: 'Last Name'
     },
+
     constituency: {
       wrapper: 'constituencyField',
       input: 'constituency',
       status: 'constituencyStatus',
       label: 'Constituency'
     },
+
     position: {
       wrapper: 'positionField',
       input: 'position',
       status: 'positionStatus',
       label: 'Position / Appointment'
     },
+
+    // NEW: PHONE NUMBER
+    phone: {
+      wrapper: 'phoneField',
+      input: 'phone',
+      status: 'phoneStatus',
+      label: 'Phone Number'
+    },
+
     receipt: {
       wrapper: 'receiptField',
       input: 'replacementReceipt',
@@ -103,7 +119,10 @@
     const reference = referenceInput.value.trim().toUpperCase();
 
     if (!reference) {
-      showLookupMessage('Please enter your registration reference.', true);
+      showLookupMessage(
+        'Please enter your registration reference.',
+        true
+      );
       return;
     }
 
@@ -140,7 +159,8 @@
 
       if (!data || !data.success || !data.registration) {
         throw new Error(
-          data?.error || 'Registration not found. Please verify your reference.'
+          data?.error ||
+          'Registration not found. Please verify your reference.'
         );
       }
 
@@ -155,7 +175,9 @@
 
       currentRegistration = registration;
 
-      allowedCorrectionFields = Array.isArray(registration.correction_fields)
+      allowedCorrectionFields = Array.isArray(
+        registration.correction_fields
+      )
         ? registration.correction_fields
         : [];
 
@@ -168,7 +190,8 @@
       populateRegistration(registration);
       configureCorrectionFields(allowedCorrectionFields);
 
-      displayReference.textContent = registration.reference || reference;
+      displayReference.textContent =
+        registration.reference || reference;
 
       adminCorrectionMessage.textContent =
         registration.admin_notes ||
@@ -183,7 +206,8 @@
       console.error('Correction lookup error:', error);
 
       showLookupMessage(
-        error.message || 'Unable to load registration. Please try again.',
+        error.message ||
+        'Unable to load registration. Please try again.',
         true
       );
 
@@ -213,6 +237,13 @@
     document.getElementById('position').value =
       registration.position || '';
 
+    // NEW: Populate existing phone number
+    const phoneInput = document.getElementById('phone');
+
+    if (phoneInput) {
+      phoneInput.value = registration.phone || '';
+    }
+
     registrationId.value = registration.id || '';
   }
 
@@ -226,24 +257,65 @@
       const input = document.getElementById(config.input);
       const status = document.getElementById(config.status);
 
+      if (!wrapper || !input || !status) return;
+
       const isAllowed = fields.includes(key);
 
+      // Show only fields requested by the admin
       wrapper.hidden = !isAllowed;
 
-      if (key === 'receipt') {
-        input.disabled = !isAllowed;
-      } else {
-        input.disabled = !isAllowed;
-      }
+      // Enable/disable the field
+      input.disabled = !isAllowed;
 
       if (isAllowed) {
-        status.textContent = 'This field has been requested for correction.';
-        status.className = 'field-status editable-note';
+        status.textContent =
+          'This field has been requested for correction.';
+
+        status.className =
+          'field-status editable-note';
+
       } else {
         status.textContent = '';
-        status.className = 'field-status locked-note';
+
+        status.className =
+          'field-status locked-note';
       }
     });
+  }
+
+  // --------------------------------------------------
+  // PHONE VALIDATION
+  // --------------------------------------------------
+
+  function validatePhoneNumber(phone) {
+    const cleaned = String(phone || '').trim();
+
+    // Remove spaces, hyphens and brackets for validation
+    const digits = cleaned.replace(/\D/g, '');
+
+    // Ghana local format: 0241234567
+    const ghLocal =
+      digits.length === 10 && digits.startsWith('0');
+
+    // Ghana international format: 233241234567
+    const ghInternational =
+      digits.length === 12 && digits.startsWith('233');
+
+    // General international phone format
+    const international =
+      digits.length >= 7 && digits.length <= 15;
+
+    if (ghLocal || ghInternational || international) {
+      return {
+        valid: true,
+        cleaned
+      };
+    }
+
+    return {
+      valid: false,
+      cleaned
+    };
   }
 
   // --------------------------------------------------
@@ -287,10 +359,16 @@
       return;
     }
 
-    // Prepare payload
+    // --------------------------------------------------
+    // PREPARE PAYLOAD
+    // --------------------------------------------------
+
     const formData = new FormData();
 
-    formData.append('reference', currentRegistration.reference);
+    formData.append(
+      'reference',
+      currentRegistration.reference
+    );
 
     // Send ONLY fields authorized for correction
     const fieldMap = {
@@ -298,30 +376,70 @@
       middle_name: 'middleName',
       last_name: 'lastName',
       constituency: 'constituency',
-      position: 'position'
+      position: 'position',
+      phone: 'phone'
     };
 
-    for (const field of allowedCorrectionFields) {
-      if (fieldMap[field]) {
-        const input = document.getElementById(fieldMap[field]);
-        const value = input.value.trim();
+    // --------------------------------------------------
+    // PROCESS AUTHORIZED TEXT FIELDS
+    // --------------------------------------------------
 
-        if (!value && field !== 'middle_name') {
+    for (const field of allowedCorrectionFields) {
+      if (!fieldMap[field]) continue;
+
+      const input = document.getElementById(
+        fieldMap[field]
+      );
+
+      if (!input) continue;
+
+      const value = input.value.trim();
+
+      // Middle name is optional
+      if (!value && field !== 'middle_name') {
+        showCorrectionMessage(
+          `${fieldConfig[field].label} cannot be empty.`,
+          true
+        );
+
+        input.focus();
+        return;
+      }
+
+      // ------------------------------------------------
+      // PHONE NUMBER VALIDATION
+      // ------------------------------------------------
+
+      if (field === 'phone') {
+        const phoneValidation = validatePhoneNumber(value);
+
+        if (!phoneValidation.valid) {
           showCorrectionMessage(
-            `${fieldConfig[field].label} cannot be empty.`,
+            'Please enter a valid phone number. Example: 0241234567 or +233241234567.',
             true
           );
+
           input.focus();
           return;
         }
 
-        formData.append(field, value);
+        // Send the phone number in the entered format
+        formData.append('phone', phoneValidation.cleaned);
+        continue;
       }
+
+      formData.append(field, value);
     }
 
-    // Validate replacement receipt if requested
+    // --------------------------------------------------
+    // VALIDATE REPLACEMENT RECEIPT IF REQUESTED
+    // --------------------------------------------------
+
     if (allowedCorrectionFields.includes('receipt')) {
-      const receiptInput = document.getElementById('replacementReceipt');
+      const receiptInput = document.getElementById(
+        'replacementReceipt'
+      );
+
       const file = receiptInput.files[0];
 
       if (!file) {
@@ -329,6 +447,7 @@
           'Please upload your replacement payment receipt.',
           true
         );
+
         receiptInput.focus();
         return;
       }
@@ -352,7 +471,10 @@
       formData.append('receipt', file);
     }
 
-    // Reference and authorized fields only
+    // --------------------------------------------------
+    // SUBMIT
+    // --------------------------------------------------
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting Correction…';
 
@@ -370,7 +492,8 @@
 
       if (!data || !data.success) {
         throw new Error(
-          data?.error || 'Your correction could not be submitted.'
+          data?.error ||
+          'Your correction could not be submitted.'
         );
       }
 
@@ -380,20 +503,26 @@
       );
 
       submitBtn.textContent = 'Correction Submitted';
-      correctionForm.querySelectorAll('input, button').forEach((element) => {
-        element.disabled = true;
-      });
+
+      correctionForm
+        .querySelectorAll('input, button')
+        .forEach((element) => {
+          element.disabled = true;
+        });
 
       // Clear query reference after success
       const url = new URL(window.location.href);
+
       url.searchParams.delete('reference');
+
       window.history.replaceState({}, '', url);
 
     } catch (error) {
       console.error('Correction submission error:', error);
 
       showCorrectionMessage(
-        error.message || 'An error occurred while submitting your correction.',
+        error.message ||
+        'An error occurred while submitting your correction.',
         true
       );
 
@@ -406,7 +535,9 @@
   // RECEIPT FILE VALIDATION
   // --------------------------------------------------
 
-  const receiptInput = document.getElementById('replacementReceipt');
+  const receiptInput = document.getElementById(
+    'replacementReceipt'
+  );
 
   receiptInput.addEventListener('change', () => {
     clearCorrectionMessage();
@@ -457,10 +588,15 @@
     correctionForm.reset();
 
     Object.values(fieldConfig).forEach((config) => {
-      document.getElementById(config.wrapper).hidden = true;
-      document.getElementById(config.input).disabled = false;
-
+      const wrapper = document.getElementById(config.wrapper);
+      const input = document.getElementById(config.input);
       const status = document.getElementById(config.status);
+
+      if (!wrapper || !input || !status) return;
+
+      wrapper.hidden = true;
+      input.disabled = false;
+
       status.textContent = '';
       status.className = 'field-status';
     });
@@ -478,7 +614,8 @@
 
   function showLookupMessage(text, isError = false) {
     lookupMessage.textContent = text;
-    lookupMessage.style.color = isError ? '#b42323' : '#666';
+    lookupMessage.style.color =
+      isError ? '#b42323' : '#666';
   }
 
   function showCorrectionMessage(text, isError = false) {
@@ -502,20 +639,30 @@
   // --------------------------------------------------
 
   async function getFunctionError(error) {
-    let errorMessage = error?.message || 'Request failed.';
+    let errorMessage =
+      error?.message || 'Request failed.';
 
-    if (error?.context && typeof error.context.json === 'function') {
+    if (
+      error?.context &&
+      typeof error.context.json === 'function'
+    ) {
       try {
         const body = await error.context.json();
+
         errorMessage =
           body?.error ||
           body?.message ||
-            errorMessage;
+          errorMessage;
+
       } catch (_) {}
     }
 
     return new Error(errorMessage);
   }
+
+  // --------------------------------------------------
+  // STATUS FORMATTING
+  // --------------------------------------------------
 
   function formatStatus(status) {
     const labels = {
