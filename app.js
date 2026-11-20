@@ -30,6 +30,9 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (submit.disabled) return;
+
     message.textContent = '';
     message.className = 'form-message';
 
@@ -68,7 +71,6 @@
     formData.append('middle_name', form.elements.middle_name.value.trim());
     formData.append('last_name', form.elements.last_name.value.trim());
 
-    // NEW: Constituency field
     formData.append(
       'constituency',
       form.elements.constituency.value.trim()
@@ -107,19 +109,37 @@
                 JSON.stringify(responseBody);
             }
           } catch (_) {
-            // Use original error if response cannot be read
+              // Keep original error
           }
         }
 
         console.error('Supabase registration error:', error);
+
+        // Friendly duplicate error
+        if (
+          isDuplicateError(detailedError) ||
+          isDuplicateError(error.message)
+        ) {
+          throw new Error(
+            'Registration already exists. A registration with this name, position and constituency has already been submitted. Please use the tracking portal to check your existing registration.'
+ 
+          );
+        }
+
         throw new Error(detailedError);
       }
 
       // Verify response
       if (!data || !data.success) {
-        throw new Error(
-          data?.error || 'Registration could not be submitted.'
-        );
+        const serverError = data?.error || 'Registration could not be submitted.';
+
+        if (isDuplicateError(serverError)) {
+          throw new Error(
+            'Registration already exists. A registration with this name, position and constituency has already been submitted. Please use the tracking portal to check your existing registration.'
+          );
+        }
+
+        throw new Error(serverError);
       }
 
       // Successful submission
@@ -181,6 +201,21 @@
       submit.innerHTML = 'Submit Registration <span>→</span>';
     }
   });
+
+  // Detect duplicate registration errors
+  function isDuplicateError(error) {
+    if (!error) return false;
+
+    const text = String(error).toLowerCase();
+
+    return (
+      text.includes('duplicate') ||
+      text.includes('already exists') ||
+      text.includes('unique constraint') ||
+      text.includes('unique_sash_registration_identity') ||
+      text.includes('23505')
+    );
+  }
 
   // Safely escape HTML to prevent injection
   function escapeHTML(value) {
