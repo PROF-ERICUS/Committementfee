@@ -131,7 +131,7 @@
     if (!sb) return;
 
     rows.innerHTML =
-      '<tr><td colspan="6" class="empty">Loading records…</td></tr>';
+      '<tr><td colspan="7" class="empty">Loading records…</td></tr>';
 
     adminMsg.textContent = '';
 
@@ -144,7 +144,7 @@
       setAdminMessage(error.message, 'error');
 
       rows.innerHTML =
-        '<tr><td colspan="6" class="empty">Failed to load registrations.</td></tr>';
+        '<tr><td colspan="7" class="empty">Failed to load registrations.</td></tr>';
 
       return;
     }
@@ -184,15 +184,20 @@
     const filter =
       document.getElementById('statusFilter')?.value || 'all';
 
+    // SEARCH: name, phone, constituency, position, reference
     const filtered = registrations.filter((r) => {
       const searchable = [
         r.first_name,
         r.middle_name,
         r.last_name,
+        r.phone,
         r.constituency,
         r.position,
         r.reference
-      ].filter(Boolean).join(' ').toLowerCase();
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
 
       const matchesSearch = searchable.includes(q);
       const matchesStatus = filter === 'all' || r.status === filter;
@@ -202,7 +207,7 @@
 
     if (!filtered.length) {
       rows.innerHTML =
-        '<tr><td colspan="6" class="empty">No registrations found.</td></tr>';
+        '<tr><td colspan="7" class="empty">No registrations found.</td></tr>';
       return;
     }
 
@@ -218,6 +223,7 @@
         : 'Unknown';
 
       const constituency = r.constituency || 'Not provided';
+      const phone = r.phone || 'Not provided';
 
       const printButton =
         r.status === 'approved'
@@ -235,6 +241,7 @@
 
       return `
         <tr>
+          <!-- APPOINTEE -->
           <td>
             <span class="person">${escapeHtml(fullName)}</span>
             <span class="sub">Submitted ${escapeHtml(submitted)}</span>
@@ -243,10 +250,22 @@
             ${correctionPreview}
           </td>
 
-          <td>${escapeHtml(constituency)}</td>
+          <!-- PHONE -->
+          <td>
+            ${escapeHtml(phone)}
+          </td>
 
-          <td>${escapeHtml(r.position || '')}</td>
+          <!-- CONSTITUENCY -->
+          <td>
+            ${escapeHtml(constituency)}
+          </td>
 
+          <!-- POSITION -->
+          <td>
+            ${escapeHtml(r.position || '')}
+          </td>
+
+          <!-- RECEIPT -->
           <td>
             ${
               r.receipt_path
@@ -255,8 +274,12 @@
             }
           </td>
 
-          <td>${statusBadge(r.status)}</td>
+          <!-- STATUS -->
+          <td>
+            ${statusBadge(r.status)}
+          </td>
 
+          <!-- ACTIONS -->
           <td>
             <div class="actions">
               <button data-action="approved" data-id="${escapeHtml(r.id)}">Approve</button>
@@ -287,6 +310,7 @@
       { key: 'last_name', label: 'Last Name' },
       { key: 'constituency', label: 'Constituency' },
       { key: 'position', label: 'Position / Appointment' },
+      { key: 'phone', label: 'Phone Number' },
       { key: 'receipt', label: 'Payment Receipt' }
     ];
 
@@ -299,7 +323,7 @@
       `Select the field(s) that need correction.\n\n` +
       `${selectionText}\n\n` +
       `Enter the number(s), separated by commas.\n` +
-      `Example: 1,4,6`
+      `Example: 1,4,6,7`
     );
 
     // Cancel aborts action
@@ -317,14 +341,14 @@
       return null;
     }
 
-    const validNumbers = ['1', '2', '3', '4', '5', '6'];
+    const validNumbers = ['1', '2', '3', '4', '5', '6', '7'];
 
     const invalid = selectedNumbers.some(
       (number) => !validNumbers.includes(number)
     );
 
     if (invalid) {
-      alert('Invalid selection. Use numbers 1 to 6.');
+      alert('Invalid selection. Use numbers 1 to 7.');
       return null;
     }
 
@@ -390,7 +414,7 @@
   // --------------------------------------------------
 
   rows?.addEventListener('click', async (e) => {
-    // View receipt
+    // VIEW RECEIPT
     const receiptLink = e.target.closest('[data-receipt]');
 
     if (receiptLink) {
@@ -400,7 +424,10 @@
       const record = registrations.find((r) => r.id === id);
 
       if (!record?.receipt_path) {
-        setAdminMessage('Receipt path is missing for this record.', 'error');
+        setAdminMessage(
+          'Receipt path is missing for this record.',
+          'error'
+        );
         return;
       }
 
@@ -417,7 +444,7 @@
       return;
     }
 
-    // Action button
+    // ACTION BUTTON
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
 
@@ -446,7 +473,7 @@
       let adminNote = null;
       let correctionFields = [];
 
-      // Collect correction data
+      // COLLECT CORRECTION DATA
       if (action === 'correction') {
         const correctionData = collectCorrection(record);
 
@@ -459,7 +486,7 @@
         correctionFields = correctionData.fields;
       }
 
-      // Collect rejection data
+      // COLLECT REJECTION DATA
       if (action === 'rejected') {
         const rejectionData = collectRejection(record);
 
@@ -596,6 +623,7 @@
       'First Name',
       'Middle Name',
       'Last Name',
+      'Phone',
       'Constituency',
       'Position',
       'Reference',
@@ -612,6 +640,7 @@
         r.first_name,
         r.middle_name,
         r.last_name,
+        r.phone,
         r.constituency,
         r.position,
         r.reference,
@@ -640,7 +669,10 @@
 
     URL.revokeObjectURL(url);
 
-    setAdminMessage('Approved registrations exported successfully.', 'success');
+    setAdminMessage(
+      'Approved registrations exported successfully.',
+      'success'
+    );
   });
 
   // --------------------------------------------------
