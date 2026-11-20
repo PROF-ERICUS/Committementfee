@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recover Registration Reference | YPG</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .recovery-card {
+      max-width: 480px;
+      margin: 60px auto;
+      padding: 28px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.08);
+    }
+
+    .recovery-card h1 {
+      margin-bottom: 10px;
+    }
+
+    .recovery-card p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .recovery-card label {
+      display: block;
+      margin-top: 18px;
+      font-weight: 600;
+    }
+
+    .recovery-card input {
+      width: 100%;
+      padding: 13px;
+      margin-top: 8px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .recovery-card button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #087b42;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .recovery-card button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .recovery-message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .recovery-message.error {
+      display: block;
+      background: #fff0f0;
+      color: #a32626;
+    }
+
+    .recovery-message.success {
+      display: block;
+      background: #eefaf2;
+      color: #176a35;
+    }
+
+    .reference-result {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .recovered-registration {
+      padding: 18px;
+      margin-bottom: 15px;
+      background: #f5f8f6;
+      border-radius: 12px;
+    }
+
+    .reference-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .reference-box strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      color: #087b42;
+      word-break: break-word;
+    }
+
+    .recovery-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .recovery-actions button {
+      flex: 1;
+    }
+
+    .recovery-actions .track-btn {
+      background: #333;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #087b42;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="recovery-card">
+    <h1>Recover Your Reference</h1>
+
+    <p>
+      Enter the phone number you used during registration.
+      Your registration reference will appear on this page
+      if a matching registration is found.
+    </p>
+
+    <form id="phoneForm">
+      <label for="phone">Phone Number</label>
+
+      <input
+        type="tel"
+        id="phone"
+        name="phone"
+        placeholder="0241234567"
+        autocomplete="tel"
+        inputmode="tel"
+        maxlength="20"
+        required
+      >
+
+      <button type="submit" id="recoverBtn">
+        Recover Reference
+      </button>
+    </form>
+
+    <div id="message" class="recovery-message"></div>
+
+    <div id="referenceResult" class="reference-result"></div>
+
+    <a href="track.html" class="back-link">
+      ← Back to Registration Tracking
+    </a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="recover-reference.js"></script>
+
+</body>
+</html>
