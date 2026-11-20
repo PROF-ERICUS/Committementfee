@@ -1,8 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Track Sash Registration | YPG</title>
 
   <link rel="stylesheet" href="styles.css">
@@ -61,6 +63,23 @@
       cursor: wait;
     }
 
+    /* Compact reference recovery link */
+    .reference-recovery {
+      margin-top: 12px;
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .reference-recovery a {
+      color: #104331;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .reference-recovery a:hover {
+      text-decoration: underline;
+    }
+
     .track-message {
       margin-top: 18px;
       font-size: 14px;
@@ -96,6 +115,47 @@
       color: #637168;
       font-size: 13px;
       overflow-wrap: anywhere;
+    }
+
+    /* Reference display */
+    .reference-display {
+      margin: 18px 0;
+      padding: 18px;
+      background: #f4f8f5;
+      border: 1px solid #dce8df;
+      border-radius: 12px;
+    }
+
+    .reference-display-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #637168;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .reference-display-number {
+      font-size: 20px;
+      font-weight: 900;
+      color: #104331;
+      overflow-wrap: anywhere;
+      letter-spacing: .5px;
+    }
+
+    .copy-reference-btn {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #104331;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .copy-reference-btn:hover {
+      background: #1b6046;
     }
 
     .status-panel {
@@ -195,8 +255,7 @@
       line-height: 1.6;
     }
 
-    /* CORRECTION NOTICE */
-
+    /* Correction notice */
     .correction-action {
       margin-top: 20px;
       padding: 20px;
@@ -271,6 +330,14 @@
       .track-form button {
         width: 100%;
       }
+
+      .reference-recovery {
+        text-align: center;
+      }
+
+      .reference-display-number {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
@@ -296,8 +363,8 @@
         <h1>Track Your Registration</h1>
 
         <p>
-          Enter the registration reference you received after submitting
-          your sash registration to view its current status.
+          Enter your registration reference to view your sash
+          registration status and retrieve your reference number.
         </p>
       </div>
 
@@ -319,6 +386,13 @@
 
       </form>
 
+      <!-- COMPACT RECOVERY LINK -->
+      <div class="reference-recovery">
+        <a href="recover-reference.html">
+          Forgot your reference? Recover it →
+        </a>
+      </div>
+
       <p id="trackMessage" class="track-message" aria-live="polite"></p>
 
       <!-- TRACKING RESULT -->
@@ -328,6 +402,28 @@
           <h2 id="appointeeName"></h2>
           <p id="appointeePosition"></p>
           <p id="resultReference" class="track-ref"></p>
+        </div>
+
+        <!-- REFERENCE NUMBER DISPLAY -->
+        <div class="reference-display">
+
+          <div class="reference-display-label">
+            Your Registration Reference
+          </div>
+
+          <div
+            id="referenceNumberDisplay"
+            class="reference-display-number"
+          ></div>
+
+          <button
+            type="button"
+            id="copyReferenceBtn"
+            class="copy-reference-btn"
+          >
+            Copy Reference Number
+          </button>
+
         </div>
 
         <!-- STATUS -->
@@ -394,43 +490,80 @@
 
   </main>
 
+  <!-- Configuration -->
   <script src="config.js"></script>
+
+  <!-- Correction handlers -->
+  <script>
+    const correctionAction =
+      document.getElementById("correctionAction");
+
+    const correctionLink =
+      document.getElementById("correctionLink");
+
+    window.YPG_SHOW_CORRECTION = function (reference) {
+      if (!correctionAction || !correctionLink) return;
+
+      const cleanReference = String(reference || "")
+        .trim()
+        .toUpperCase();
+
+      correctionLink.href =
+        "correction.html?reference=" +
+        encodeURIComponent(cleanReference);
+
+      correctionAction.hidden = false;
+    };
+
+    window.YPG_HIDE_CORRECTION = function () {
+      if (correctionAction) {
+        correctionAction.hidden = true;
+      }
+    };
+
+    window.YPG_HIDE_CORRECTION();
+
+    document.getElementById("reference")?.addEventListener("input", () => {
+      window.YPG_HIDE_CORRECTION();
+    });
+  </script>
+
+  <!-- Tracking logic -->
   <script src="track.js"></script>
 
-  <!-- Correction button handling -->
+  <!-- Copy Reference functionality -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const correctionAction = document.getElementById("correctionAction");
-      const correctionLink = document.getElementById("correctionLink");
-      const referenceInput = document.getElementById("reference");
+      const copyButton =
+        document.getElementById("copyReferenceBtn");
 
-      window.YPG_SHOW_CORRECTION = function (reference) {
-        if (!correctionAction || !correctionLink) return;
+      const referenceDisplay =
+        document.getElementById("referenceNumberDisplay");
 
-        const cleanReference = String(reference || "")
-          .trim()
-          .toUpperCase();
+      copyButton?.addEventListener("click", async function () {
+        const reference =
+          referenceDisplay?.textContent?.trim();
 
-        correctionLink.href =
-          "correction.html?reference=" +
-          encodeURIComponent(cleanReference);
+        if (!reference || reference === "N/A") return;
 
-        correctionAction.hidden = false;
-      };
+        try {
+          await navigator.clipboard.writeText(reference);
+        } catch (error) {
+          const temporaryInput = document.createElement("textarea");
 
-      window.YPG_HIDE_CORRECTION = function () {
-        if (correctionAction) {
-          correctionAction.hidden = true;
+          temporaryInput.value = reference;
+          document.body.appendChild(temporaryInput);
+          temporaryInput.select();
+
+          document.execCommand("copy");
+          temporaryInput.remove();
         }
-      };
 
-      // Hide correction action until the tracking script confirms
-      // that this registration is in correction status.
-      window.YPG_HIDE_CORRECTION();
+        copyButton.textContent = "Copied Successfully ✓";
 
-      // If reference is typed, keep the action hidden until lookup succeeds.
-      referenceInput?.addEventListener("input", function () {
-        window.YPG_HIDE_CORRECTION();
+        setTimeout(() => {
+          copyButton.textContent = "Copy Reference Number";
+        }, 2000);
       });
     });
   </script>
