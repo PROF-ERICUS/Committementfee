@@ -5,6 +5,7 @@
   const fileName = document.getElementById('fileName');
   const message = document.getElementById('formMessage');
   const submit = document.getElementById('submitBtn');
+  const phoneInput = form.elements.phone;
 
   // Supabase configuration check
   const supabaseReady =
@@ -64,12 +65,35 @@
       return;
     }
 
+    // Get and normalize phone number
+    const phone = phoneInput.value.trim().replace(/\s+/g, '');
+
+    if (!phone) {
+      message.textContent = 'Please enter your phone number.';
+      message.classList.add('error');
+      phoneInput.focus();
+      return;
+    }
+
+    // Basic phone validation
+    const phoneDigits = phone.replace(/\D/g, '');
+
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      message.textContent =
+        'Please enter a valid phone number.';
+      message.classList.add('error');
+      phoneInput.focus();
+      return;
+    }
+
     // Prepare registration data
     const formData = new FormData();
 
     formData.append('first_name', form.elements.first_name.value.trim());
     formData.append('middle_name', form.elements.middle_name.value.trim());
     formData.append('last_name', form.elements.last_name.value.trim());
+
+    formData.append('phone', phone);
 
     formData.append(
       'constituency',
@@ -109,7 +133,7 @@
                 JSON.stringify(responseBody);
             }
           } catch (_) {
-              // Keep original error
+            // Keep original error
           }
         }
 
@@ -122,7 +146,6 @@
         ) {
           throw new Error(
             'Registration already exists. A registration with this name, position and constituency has already been submitted. Please use the tracking portal to check your existing registration.'
- 
           );
         }
 
@@ -131,7 +154,8 @@
 
       // Verify response
       if (!data || !data.success) {
-        const serverError = data?.error || 'Registration could not be submitted.';
+        const serverError =
+          data?.error || 'Registration could not be submitted.';
 
         if (isDuplicateError(serverError)) {
           throw new Error(
