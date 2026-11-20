@@ -32,7 +32,7 @@
     positionElement.insertAdjacentElement('afterend', constituencyElement);
   }
 
-  // Correction button helpers from track.html
+  // Correction button helpers
   function hideCorrectionButton() {
     if (typeof window.YPG_HIDE_CORRECTION === 'function') {
       window.YPG_HIDE_CORRECTION();
@@ -47,11 +47,13 @@
 
   hideCorrectionButton();
 
+  // Auto-track when reference is supplied in the URL
   if (urlReference) {
     referenceInput.value = urlReference.trim().toUpperCase();
     lookupRegistration(urlReference);
   }
 
+  // Manual tracking form
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -66,6 +68,7 @@
     lookupRegistration(reference);
   });
 
+  // Fetch registration
   async function lookupRegistration(reference) {
     result.hidden = true;
     hideCorrectionButton();
@@ -101,7 +104,7 @@
             errorMessage =
               body.error ||
               body.message ||
-              errorMessage;
+            errorMessage;
           } catch (_) {}
         }
 
@@ -110,7 +113,8 @@
 
       if (!data || !data.success || !data.registration) {
         throw new Error(
-          data?.error || 'Registration was not found. Please check your reference.'
+          data?.error ||
+          'Registration was not found. Please check your reference.'
         );
       }
 
@@ -125,7 +129,8 @@
       hideCorrectionButton();
 
       showMessage(
-        err.message || 'Unable to track registration. Please try again.',
+        err.message ||
+        'Unable to track registration. Please try again.',
         true
       );
 
@@ -135,6 +140,7 @@
     }
   }
 
+  // Render registration details
   function renderRegistration(registration) {
     const fullName = [
       registration.first_name,
@@ -142,13 +148,21 @@
       registration.last_name
     ].filter(Boolean).join(' ');
 
-    document.getElementById('appointeeName').textContent =
-      fullName || 'Registered Appointee';
+    // Name
+    const nameElement = document.getElementById('appointeeName');
+    if (nameElement) {
+      nameElement.textContent =
+        fullName || 'Registered Appointee';
+    }
 
-    document.getElementById('appointeePosition').textContent =
-      registration.position || 'Position not specified';
+    // Position
+    const positionElement = document.getElementById('appointeePosition');
+    if (positionElement) {
+      positionElement.textContent =
+        registration.position || 'Position not specified';
+    }
 
-    // Display Constituency
+    // Constituency
     if (constituencyElement) {
       constituencyElement.textContent = registration.constituency
         ? `Constituency: ${registration.constituency}`
@@ -157,15 +171,38 @@
       constituencyElement.hidden = !registration.constituency;
     }
 
-    document.getElementById('resultReference').textContent =
-      `Reference: ${registration.reference || 'N/A'}`;
+    // Registration reference
+    const reference = registration.reference || 'N/A';
 
-    document.getElementById('statusValue').textContent =
-      statusLabel(registration.status);
+    const resultReference = document.getElementById('resultReference');
+    if (resultReference) {
+      resultReference.textContent = `Reference: ${reference}`;
+    }
 
-    document.getElementById('statusDescription').textContent =
-      statusDescription(registration.status);
+    // Large reference display
+    const referenceNumberDisplay =
+      document.getElementById('referenceNumberDisplay');
 
+    if (referenceNumberDisplay) {
+      referenceNumberDisplay.textContent = reference;
+    }
+
+    // Status
+    const statusValue = document.getElementById('statusValue');
+    if (statusValue) {
+      statusValue.textContent = statusLabel(registration.status);
+    }
+
+    // Status description
+    const statusDescriptionElement =
+      document.getElementById('statusDescription');
+
+    if (statusDescriptionElement) {
+      statusDescriptionElement.textContent =
+        statusDescription(registration.status);
+    }
+
+    // Timeline
     renderTimeline(registration.status);
 
     // Admin Notes
@@ -173,17 +210,19 @@
     const adminNoteText = document.getElementById('adminNoteText');
 
     if (
+      adminNote &&
+      adminNoteText &&
       registration.admin_notes &&
       ['correction', 'rejected'].includes(registration.status)
     ) {
       adminNoteText.textContent = registration.admin_notes;
       adminNote.hidden = false;
-    } else {
+    } else if (adminNote && adminNoteText) {
       adminNote.hidden = true;
       adminNoteText.textContent = '';
     }
 
-    // Show correction action ONLY for correction status
+    // Correction action - only when correction is required
     if (registration.status === 'correction') {
       showCorrectionButton(registration.reference);
     } else {
@@ -191,6 +230,7 @@
     }
   }
 
+  // Status labels
   function statusLabel(status) {
     const labels = {
       pending: 'Pending Review',
@@ -204,6 +244,7 @@
     return labels[status] || 'Status Update';
   }
 
+  // Status descriptions
   function statusDescription(status) {
     const descriptions = {
       pending:
@@ -229,8 +270,11 @@
       'Your registration status has been updated.';
   }
 
+  // Timeline
   function renderTimeline(status) {
     const timeline = document.getElementById('trackTimeline');
+
+    if (!timeline) return;
 
     const stages = [
       {
@@ -303,7 +347,10 @@
     }).join('');
   }
 
+  // Message display
   function showMessage(text, isError = false) {
+    if (!message) return;
+
     message.textContent = text;
     message.className = 'track-message';
 
@@ -312,6 +359,7 @@
     }
   }
 
+  // HTML escaping
   function escapeHTML(value) {
     return String(value).replace(/[&<>"']/g, (char) => ({
       '&': '&amp;',
@@ -321,4 +369,5 @@
       "'": '&#39;'
     }[char]));
   }
+
 })();
