@@ -32,13 +32,15 @@
       font-weight: 600;
     }
 
-    .recovery-card input {
+    .recovery-card input,
+    .recovery-card select {
       width: 100%;
       padding: 13px;
       margin-top: 8px;
       border: 1px solid #ddd;
       border-radius: 8px;
       box-sizing: border-box;
+      background: #fff;
     }
 
     .recovery-card button {
@@ -125,12 +127,96 @@
       color: #087b42;
       text-decoration: none;
     }
+
+    /* Existing registration recovery */
+    .recovery-divider {
+      margin: 28px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .recovery-divider::before,
+    .recovery-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #e5e5e5;
+    }
+
+    .old-registration-box {
+      padding: 18px;
+      border: 1px solid #e3e9e5;
+      border-radius: 12px;
+      background: #f8faf8;
+    }
+
+    .old-registration-box h3 {
+      margin: 0 0 8px;
+      color: #087b42;
+    }
+
+    .old-registration-box p {
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    #oldRegistrationForm {
+      display: none;
+    }
+
+    #oldRegistrationForm.active {
+      display: block;
+    }
+
+    .old-registration-toggle {
+      background: #333 !important;
+    }
+
+    .old-registration-note {
+      padding: 12px;
+      margin-top: 14px;
+      background: #fff8e8;
+      color: #75551b;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .old-registration-message {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .old-registration-message.error {
+      display: block;
+      background: #fff0f0;
+      color: #a32626;
+    }
+
+    .old-registration-message.success {
+      display: block;
+      background: #eefaf2;
+      color: #176a35;
+    }
+
+    @media (max-width: 600px) {
+      .recovery-card {
+        margin: 20px 12px;
+        padding: 22px;
+      }
+    }
   </style>
 </head>
 
 <body>
 
   <main class="recovery-card">
+
     <h1>Recover Your Reference</h1>
 
     <p>
@@ -139,7 +225,9 @@
       if a matching registration is found.
     </p>
 
+    <!-- EXISTING PHONE RECOVERY -->
     <form id="phoneForm">
+
       <label for="phone">Phone Number</label>
 
       <input
@@ -156,15 +244,128 @@
       <button type="submit" id="recoverBtn">
         Recover Reference
       </button>
+
     </form>
 
     <div id="message" class="recovery-message"></div>
 
     <div id="referenceResult" class="reference-result"></div>
 
+    <!-- DIVIDER -->
+    <div class="recovery-divider">OR</div>
+
+    <!-- OLD REGISTRATION OPTION -->
+    <div class="old-registration-box">
+
+      <h3>Already Registered?</h3>
+
+      <p>
+        If you registered before phone numbers were required,
+        use this option to locate your existing registration
+        and add your phone number.
+      </p>
+
+      <button
+        type="button"
+        id="toggleOldRegistration"
+        class="old-registration-toggle"
+      >
+        Add Phone to Existing Registration
+      </button>
+
+      <!-- OLD REGISTRATION FORM -->
+      <form id="oldRegistrationForm">
+
+        <label for="oldFirstName">First Name</label>
+        <input
+          type="text"
+          id="oldFirstName"
+          name="first_name"
+          placeholder="First name used during registration"
+          autocomplete="given-name"
+          required
+        >
+
+        <label for="oldMiddleName">Middle Name (if any)</label>
+        <input
+          type="text"
+          id="oldMiddleName"
+          name="middle_name"
+          placeholder="Middle name"
+          autocomplete="additional-name"
+        >
+
+        <label for="oldLastName">Last Name</label>
+        <input
+          type="text"
+          id="oldLastName"
+          name="last_name"
+          placeholder="Last name used during registration"
+          autocomplete="family-name"
+          required
+        >
+
+        <label for="oldConstituency">Constituency</label>
+        <input
+          type="text"
+          id="oldConstituency"
+          name="constituency"
+          placeholder="Your constituency"
+          required
+        >
+
+        <label for="oldPosition">Position</label>
+        <input
+          type="text"
+          id="oldPosition"
+          name="position"
+          placeholder="Position you registered for"
+          required
+        >
+
+        <label for="newPhone">Phone Number to Add</label>
+        <input
+          type="tel"
+          id="newPhone"
+          name="new_phone"
+          placeholder="0241234567"
+          autocomplete="tel"
+          inputmode="tel"
+          maxlength="20"
+          required
+        >
+
+        <div class="old-registration-note">
+          This form is for applicants who registered before phone
+          numbers were collected. Your details will be checked against
+          your existing registration. A new registration will not be created.
+        </div>
+
+        <button
+          type="submit"
+          id="attachPhoneBtn"
+        >
+          Find Registration & Add Phone
+        </button>
+
+      </form>
+
+      <div
+        id="oldRegistrationMessage"
+        class="old-registration-message"
+      ></div>
+
+      <div
+        id="oldRegistrationResult"
+        class="reference-result"
+      ></div>
+
+    </div>
+
     <a href="track.html" class="back-link">
       ← Back to Registration Tracking
     </a>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
